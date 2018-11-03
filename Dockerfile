@@ -1,5 +1,7 @@
 FROM alpine:latest
 
+MAINTAINER Rhys Botfield <rhys@sproutdesk.co.uk>
+
 RUN apk add --no-cache varnish
 
 ADD default.vcl /etc/varnish/default.vcl
