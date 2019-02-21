@@ -46,7 +46,7 @@ sub vcl_init {
 
 sub vcl_recv {
     set req.backend_hint = app.backend();
-    
+
     # Remove port from host header
     set req.http.Host = regsub(req.http.Host, ":[0-9]+", "");
 
@@ -78,7 +78,8 @@ sub vcl_recv {
         if (!client.ip ~ purge) {
             return (synth(405, "This IP is not allowed to send PURGE requests."));
         }
-        return (purge);
+        ban("req.http.host ~ .*");
+        return(synth(200,"Cache Purged"));
     }
 
     # Only deal with "normal" types
@@ -156,9 +157,9 @@ sub vcl_recv {
 }
 
 sub vcl_pipe {
-  
+
     set bereq.http.Connection = "Close";
-    
+
     # Websocket support https://www.varnish-cache.org/docs/4.0/users-guide/vcl-example-websockets.html
     if (req.http.upgrade) {
         set bereq.http.upgrade = req.http.upgrade;
@@ -170,7 +171,7 @@ sub vcl_pipe {
 sub vcl_deliver {
     # Add debug header to see if it's a HIT/MISS and the number of hits, only if you're an editor.
     if (client.ip ~ editors){
-        if (obj.hits > 0) { 
+        if (obj.hits > 0) {
             set resp.http.X-Cache = "HIT";
         } else {
             set resp.http.X-Cache = "MISS";
@@ -200,7 +201,7 @@ sub vcl_hash {
     } else {
         hash_data(server.ip);
     }
-    
+
     if (req.http.Cookie) {
         hash_data(req.http.Cookie);
     }
